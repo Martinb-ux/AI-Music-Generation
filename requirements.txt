@@ -1,0 +1,21 @@
+# Core dependencies for Music Generation LSTM project
+tensorflow>=2.13.0
+numpy>=1.24.0
+matplotlib>=3.7.0
+
+# MIDI processing
+pretty_midi>=0.2.10
+music21>=9.1.0
+
+# Web interface
+streamlit>=1.28.0
+
+# Audio synthesis (requires system install: brew install fluid-synth)
+# pyfluidsynth>=1.3.0
+
+# Data processing
+pandas>=2.0.0
+scipy>=1.11.0
+
+# Development
+jupyter>=1.0.0

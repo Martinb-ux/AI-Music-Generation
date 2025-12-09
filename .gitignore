@@ -1,0 +1,51 @@
+# Data files (download from internet instead)
+music_generation/data/raw/*
+music_generation/data/processed/*
+*.mid
+*.midi
+*.wav
+*.mp3
+
+# Keep directory structure
+!music_generation/data/raw/.gitkeep
+!music_generation/data/processed/.gitkeep
+
+# Model checkpoints
+music_generation/checkpoints/*
+!music_generation/checkpoints/.gitkeep
+*.keras
+*.h5
+*.weights.h5
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+temp/
+tmp/
+*.tmp
