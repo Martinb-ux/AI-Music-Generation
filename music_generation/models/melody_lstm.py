@@ -4,6 +4,7 @@ Event-based LSTM Model for Monophonic Melody Generation (Week 1)
 This model generates melodies one note at a time, similar to text generation.
 """
 
+import os
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -108,6 +109,8 @@ class MelodyLSTM:
         Returns:
             List of callbacks
         """
+        checkpoint_dir = os.path.dirname(checkpoint_path)
+
         callbacks = [
             # Save best model
             keras.callbacks.ModelCheckpoint(
@@ -118,10 +121,10 @@ class MelodyLSTM:
                 verbose=1
             ),
 
-            # Early stopping
+            # Early stopping (increased patience for longer training)
             keras.callbacks.EarlyStopping(
                 monitor='val_loss',
-                patience=5,
+                patience=10,
                 restore_best_weights=True,
                 verbose=1
             ),
@@ -130,15 +133,21 @@ class MelodyLSTM:
             keras.callbacks.ReduceLROnPlateau(
                 monitor='val_loss',
                 factor=0.5,
-                patience=3,
-                min_lr=1e-6,
+                patience=5,
+                min_lr=1e-7,
                 verbose=1
             ),
 
             # TensorBoard logging
             keras.callbacks.TensorBoard(
-                log_dir='../checkpoints/logs',
+                log_dir=os.path.join(checkpoint_dir, 'logs'),
                 histogram_freq=1
+            ),
+
+            # CSV logger for easy analysis
+            keras.callbacks.CSVLogger(
+                os.path.join(checkpoint_dir, 'training_log.csv'),
+                append=True
             )
         ]
 

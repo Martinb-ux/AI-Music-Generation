@@ -13,8 +13,9 @@ import subprocess
 import tempfile
 import io
 
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add parent directory to path to access music_generation modules
+music_gen_dir = Path(__file__).parent.parent
+sys.path.insert(0, str(music_gen_dir))
 
 from preprocessing.midi_encoder import MIDIEventEncoder
 from models.melody_lstm import MelodyLSTM
@@ -68,8 +69,9 @@ def midi_to_audio(midi_bytes: bytes, soundfont_path: str = None) -> bytes:
     if soundfont_path is None:
         # Try common soundfont locations
         common_paths = [
-            "/usr/share/sounds/sf2/FluidR3_GM.sf2",
-            "/usr/local/share/soundfonts/FluidR3_GM.sf2",
+            "/usr/share/soundfonts/FluidR3_GM.sf2",  # Arch Linux
+            "/usr/share/sounds/sf2/FluidR3_GM.sf2",  # Ubuntu/Debian
+            "/usr/local/share/soundfonts/FluidR3_GM.sf2",  # macOS/Homebrew
             "soundfonts/FluidR3_GM.sf2"
         ]
         for path in common_paths:
@@ -162,7 +164,7 @@ def main():
     # Model path
     model_path = st.sidebar.text_input(
         "Model Path",
-        value="../checkpoints/melody_lstm_best.keras",
+        value="music_generation/checkpoints/melody_lstm_best.keras",
         help="Path to trained model checkpoint"
     )
 

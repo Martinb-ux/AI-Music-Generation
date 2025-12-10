@@ -47,8 +47,9 @@ class JSBChoralesDataset:
         Args:
             force_download: Re-download even if files exist
         """
-        # Alternative source: JSB Chorales from GitHub
-        dataset_url = "https://github.com/czhuang/JSB-Chorales-dataset/archive/refs/heads/master.zip"
+        # JSB Chorales MIDI files from infinite-bach repository
+        # This contains actual MIDI files
+        dataset_url = "https://github.com/jamesrobertlloyd/infinite-bach/archive/refs/heads/master.zip"
         zip_path = self.raw_dir / "jsb_chorales.zip"
         extract_dir = self.raw_dir
 
@@ -138,14 +139,21 @@ class JSBChoralesDataset:
                 all_X.append(X)
                 all_y.append(y)
 
-                # Data augmentation: transpose by ±1, ±2 semitones
+                # Data augmentation: transpose by ±1, ±2, ±4 semitones
                 if augment:
-                    for semitones in [-2, -1, 1, 2]:
+                    for semitones in [-4, -2, -1, 1, 2, 4]:
                         transposed = self.encoder.augment_transpose(sequence, semitones)
                         if transposed is not None:
                             X_aug, y_aug = self.encoder.create_training_sequences(transposed, seq_length)
                             all_X.append(X_aug)
                             all_y.append(y_aug)
+
+                    # Time shifting augmentation: rotate sequences
+                    for shift in [-8, -4, 4, 8]:  # Shift by half/full bars
+                        shifted = np.roll(sequence, shift)
+                        X_shift, y_shift = self.encoder.create_training_sequences(shifted, seq_length)
+                        all_X.append(X_shift)
+                        all_y.append(y_shift)
 
                 if (i + 1) % 50 == 0:
                     print(f"Processed {i + 1}/{len(midi_files)} files...")
@@ -213,34 +221,42 @@ class JSBChoralesDataset:
         print(f"Loaded {split} data: X shape {X.shape}, y shape {y.shape}")
         return X, y
 
-    def create_train_val_split(self, X: np.ndarray, y: np.ndarray, val_split: float = 0.15) -> Tuple:
+    def create_train_val_test_split(self, X: np.ndarray, y: np.ndarray, train_ratio: float = 0.7, val_ratio: float = 0.15) -> Tuple:
         """
-        Split data into train and validation sets.
+        Split data into train, validation, and test sets.
 
         Args:
             X: Input sequences
             y: Target sequences
-            val_split: Fraction of data to use for validation
+            train_ratio: Fraction of data to use for training (default 0.7)
+            val_ratio: Fraction of data to use for validation (default 0.15)
 
         Returns:
-            X_train, X_val, y_train, y_val
+            X_train, X_val, X_test, y_train, y_val, y_test
         """
         # Shuffle data
         indices = np.random.permutation(len(X))
         X_shuffled = X[indices]
         y_shuffled = y[indices]
 
-        # Split
-        val_size = int(len(X) * val_split)
-        X_train = X_shuffled[val_size:]
-        X_val = X_shuffled[:val_size]
-        y_train = y_shuffled[val_size:]
-        y_val = y_shuffled[:val_size]
+        # Calculate split points
+        train_end = int(len(X) * train_ratio)
+        val_end = train_end + int(len(X) * val_ratio)
 
-        print(f"Train set: {len(X_train)} sequences")
-        print(f"Val set: {len(X_val)} sequences")
+        # Split into train/val/test
+        X_train = X_shuffled[:train_end]
+        X_val = X_shuffled[train_end:val_end]
+        X_test = X_shuffled[val_end:]
 
-        return X_train, X_val, y_train, y_val
+        y_train = y_shuffled[:train_end]
+        y_val = y_shuffled[train_end:val_end]
+        y_test = y_shuffled[val_end:]
+
+        print(f"Train set: {len(X_train)} sequences ({train_ratio*100:.0f}%)")
+        print(f"Val set: {len(X_val)} sequences ({val_ratio*100:.0f}%)")
+        print(f"Test set: {len(X_test)} sequences ({(1-train_ratio-val_ratio)*100:.0f}%)")
+
+        return X_train, X_val, X_test, y_train, y_val, y_test
 
 
 def prepare_dataset(data_dir: str = "../data", force_download: bool = False):
