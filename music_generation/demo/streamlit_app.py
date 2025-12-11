@@ -161,10 +161,11 @@ def main():
     # Sidebar - Model settings
     st.sidebar.header("⚙️ Generation Settings")
 
-    # Model path
+    # Model path - construct absolute path relative to script location
+    default_model_path = music_gen_dir / "checkpoints" / "melody_lstm_best.keras"
     model_path = st.sidebar.text_input(
         "Model Path",
-        value="music_generation/checkpoints/melody_lstm_best.keras",
+        value=str(default_model_path),
         help="Path to trained model checkpoint"
     )
 

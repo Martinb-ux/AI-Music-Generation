@@ -90,7 +90,8 @@ def train_melody_lstm(
     epochs: int = 30,
     batch_size: int = 128,
     seq_length: int = 64,
-    force_download: bool = False
+    force_download: bool = False,
+    resume: bool = False
 ):
     """
     Complete training pipeline for melody LSTM.
@@ -102,6 +103,7 @@ def train_melody_lstm(
         batch_size: Training batch size
         seq_length: Length of training sequences
         force_download: Whether to re-download dataset
+        resume: Whether to resume training from existing checkpoint
     """
     # Set seeds for reproducibility
     np.random.seed(42)
@@ -152,23 +154,42 @@ def train_melody_lstm(
     print(f"  Vocabulary size: {dataset.encoder.vocab_size}")
 
     # ========================================
-    # Step 2: Build Model
+    # Step 2: Build/Load Model
     # ========================================
-    print("\n[STEP 2] Building Model...")
-    print("-"*80)
+    checkpoint_path = os.path.join(checkpoint_dir, "melody_lstm_best.keras")
 
-    model = create_model(
-        vocab_size=dataset.encoder.vocab_size,
-        seq_length=seq_length
-    )
+    if resume and os.path.exists(checkpoint_path):
+        print("\n[STEP 2] Loading Model from Checkpoint...")
+        print("-"*80)
+        print(f"Resuming from: {checkpoint_path}")
+
+        # Create model structure first
+        model = create_model(
+            vocab_size=dataset.encoder.vocab_size,
+            seq_length=seq_length
+        )
+
+        # Load weights from checkpoint
+        model.load(checkpoint_path)
+        print("✓ Model loaded successfully - resuming training from checkpoint")
+
+    else:
+        print("\n[STEP 2] Building Model...")
+        print("-"*80)
+
+        if resume:
+            print("⚠ Resume requested but no checkpoint found - starting fresh")
+
+        model = create_model(
+            vocab_size=dataset.encoder.vocab_size,
+            seq_length=seq_length
+        )
 
     # ========================================
     # Step 3: Train Model
     # ========================================
     print("\n[STEP 3] Training Model...")
     print("-"*80)
-
-    checkpoint_path = os.path.join(checkpoint_dir, "melody_lstm_best.keras")
 
     history = model.train(
         X_train=X_train,
@@ -309,6 +330,8 @@ if __name__ == "__main__":
                         help="Sequence length")
     parser.add_argument("--force_download", action="store_true",
                         help="Force re-download of dataset")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume training from existing checkpoint")
     parser.add_argument("--quick_test", action="store_true",
                         help="Run quick test with minimal settings")
 
@@ -323,5 +346,6 @@ if __name__ == "__main__":
             epochs=args.epochs,
             batch_size=args.batch_size,
             seq_length=args.seq_length,
-            force_download=args.force_download
+            force_download=args.force_download,
+            resume=args.resume
         )
