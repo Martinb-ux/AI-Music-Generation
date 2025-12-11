@@ -13,6 +13,7 @@ music_generation/data/processed/*
 # Model checkpoints
 music_generation/checkpoints/*
 !music_generation/checkpoints/.gitkeep
+!music_generation/checkpoints/melody_lstm_best.keras
 *.keras
 *.h5
 *.weights.h5
